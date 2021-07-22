@@ -1,0 +1,210 @@
+    JOINS
+
+1.
+ SELECT reviewer.rev_name 
+ FROM  reviewer INNER JOIN rating ON reviewer.rev_id = rating.rev_id 
+ WHERE rating.rev_stars IS NULL;
+
+2.
+SELECT act_fname,act_lname,role
+FROM (actor INNER JOIN movie_cast ON actor.act_id=movie_cast.act_id)
+	           INNER JOIN movie ON movie_cast.mov_id=movie.mov_id 
+ WHERE movie.mov_title='Annie Hall';
+
+3.
+SELECT  * 
+FROM ((director NATURAL JOIN movie_direction) NATURAL JOIN movie_cast)                         NATURAL JOIN movie 
+WHERE mov_title = 'Eyes Wide Shut';
+
+4.
+SELECT director.dir_fname, director.dir_lname, movie.mov_title
+FROM ((director NATURAL JOIN movie_direction) NATURAL JOIN movie_cast) NATURAL JOIN movie
+WHERE movie_cast.role='Sean Maguire';
+
+5.
+SELECT act_fname, act_lname,mov_title,mov_year
+FROM actor
+NATURAL JOIN movie_cast 
+NATURAL JOIN movie 
+WHERE mov_year NOT BETWEEN 1990 and 2000;
+(OR)
+SELECT act_fname, act_lname, mov_title, mov_year
+FROM actor INNER JOIN movie_cast 
+ON actor.act_id=movie_cast.act_id INNER JOIN movie ON  movie_cast.mov_id=movie.mov_id
+WHERE mov_year NOT BETWEEN 1990 and 2000;
+
+6.
+SELECT dir_fname,dir_lname, gen_title,count(gen_title)
+FROM director
+NATURAL JOIN movie_direction
+NATURAL JOIN movie_genres
+NATURAL JOIN genres
+GROUP BY dir_fname, dir_lname,gen_title
+ORDER BY dir_fname ASC,dir_lname ASC;
+
+7.
+SELECT mov_title,mov_year,gen_title
+FROM (movie NATURAL JOIN movie_genres) NATURAL JOIN genres;
+
+8.
+SELECT mov_title, mov_year, gen_title, dir_fname, dir_lname
+FROM movie
+NATURAL JOIN movie_genres
+NATURAL JOIN genres
+NATURAL JOIN movie_direction
+NATURAL JOIN director;
+
+9.
+SELECT mov_title,mov_year,mov_dt_rel,mov_time,dir_fname,dir_lname
+FROM movie
+NATURAL JOIN movie_direction
+NATURAL JOIN director
+WHERE mov_dt_rel <'01/01/1989'
+ORDER BY mov_dt_rel DESC;
+
+10.
+SELECT gen_title, AVG(mov_time), COUNT(gen_title) 
+FROM movie
+NATURAL JOIN  movie_genres
+NATURAL JOIN  genres
+GROUP BY gen_title;
+
+11.
+SELECT mov_title, mov_year, dir_fname, dir_lname, act_fname, act_lname, role 
+FROM  movie
+NATURAL JOIN movie_direction
+NATURAL JOIN movie_cast
+NATURAL JOIN director
+NATURAL JOIN actor
+WHERE mov_time=(SELECT MIN(mov_time) FROM movie);
+
+12.
+SELECT DISTINCT mov_year
+FROM movie INNER JOIN rating
+ON movie.mov_id = rating.mov_id 
+WHERE rev_stars IN (3, 4)
+ORDER BY mov_year;
+
+13.
+SELECT rev_name, mov_title, rev_stars
+FROM movie 
+NATURAL JOIN rating 
+NATURAL JOIN reviewer
+ORDER BY rev_name, mov_title, rev_stars;
+
+14.
+SELECT mov_title, MAX(rev_stars)
+FROM movie
+INNER JOIN rating ON movie.mov_id = rating.mov_id
+GROUP BY mov_title 
+HAVING MAX(rev_stars)>0
+ORDER BY mov_title;
+
+15.
+SELECT mov_title, dir_fname ,dir_lname AS NAME, rev_stars
+FROM Movie NATURAL
+JOIN movie_direction NATURAL
+JOIN director
+LEFT JOIN rating on rating.mov_id = movie.mov_id
+where rev_stars is not null;
+
+16.
+SELECT mov_title, act_fname, act_lname, role
+FROM movie INNER
+JOIN movie_cast 
+ON movie_cast.mov_id=movie.mov_id 
+INNER JOIN actor 
+ON movie_cast.act_id=actor.act_id
+WHERE actor.act_id IN (
+SELECT act_id 
+FROM movie_cast 
+GROUP BY act_id HAVING COUNT(*)>=2);
+ 
+17.
+SELECT dir_fname, dir_lname, mov_title, act_fname, act_lname, role
+FROM actor INNER
+JOIN movie_cast 
+ON actor.act_id=movie_cast.act_id
+INNER JOIN movie_direction 
+ON movie_cast.mov_id=movie_direction.mov_id
+INNER JOIN director 
+ON movie_direction.dir_id=director.dir_id
+INNER JOIN movie 
+ON movie.mov_id=movie_direction.mov_id
+WHERE act_fname='Claire' AND act_lname='Danes';
+ 
+ 
+18.
+SELECT act_fname, act_lname, mov_title, role
+FROM actor INNER
+JOIN movie_cast 
+ON actor.act_id=movie_cast.act_id INNER
+JOIN movie_direction 
+ON movie_cast.mov_id=movie_direction.mov_id INNER
+JOIN director 
+ON movie_direction.dir_id=director.dir_id INNER
+JOIN movie 
+ON movie.mov_id=movie_direction.mov_id
+WHERE act_fname=dir_fname 
+AND act_lname=dir_lname;
+
+19.
+SELECT actor.act_fname, actor.act_lname
+FROM
+movie_cast INNER
+JOIN actor ON
+movie_cast.act_id = actor.act_id
+Where mov_id = (
+SELECT mov_id
+FROM movie
+Where mov_title = 'Chinatown');
+
+20.
+SELECT movie.mov_title
+FROM  movie INNER
+JOIN movie_cast 
+ON  movie.mov_id = movie_cast.mov_id
+WHERE movie_cast.act_id IN ( 
+Select act_id 
+FROM actor 
+WHERE act_fname='Harrison' 
+AND act_lname='Ford');
+
+21.
+SELECT mov_title, mov_year, rev_stars, mov_rel_country FROM movie NATURAL JOIN rating WHERE rev_stars = ( SELECT MAX(rev_stars) FROM rating );
+ 
+22.
+SELECT mov_title, mov_year, rev_stars
+FROM movie 
+NATURAL JOIN movie_genres 
+NATURAL JOIN genres 
+NATURAL JOIN rating
+WHERE gen_title = 'Mystery' AND rev_stars >= ALL (
+SELECT rev_stars
+FROM rating 
+NATURAL JOIN movie_genres 
+NATURAL JOIN genres
+WHERE gen_title = 'Mystery');
+
+23.
+SELECT mov_year,gen_title,count(gen_title), avg(rev_stars)
+FROM movie 
+NATURAL JOIN movie_genres 
+NATURAL JOIN genres
+NATURAL JOIN rating
+WHERE gen_title='Mystery' 
+GROUP BY mov_year,gen_title;
+
+24.
+SELECT mov_title, act_fname, act_lname, 
+mov_year, role, gen_title, dir_fname, dir_lname, 
+mov_dt_rel, rev_stars
+FROM movie 
+NATURAL JOIN movie_cast
+NATURAL JOIN actor
+NATURAL JOIN movie_genres
+NATURAL JOIN genres
+NATURAL JOIN movie_direction
+NATURAL JOIN director
+NATURAL JOIN rating
+WHERE act_gender='F';
